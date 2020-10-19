@@ -146,31 +146,38 @@ df = pandas.read_csv()
 
 Quel est le type de l'objet `df`?
 ```
-
+c'est une dataframe 
 ```
 
 ##### Descriptions d'une table de données
 Que permettent les méthodes suivantes?
 ###### df.shape
 ```
+permet d'avoir le nb de col lignes => attributs qui donne 1 tuple 
 ```
-###### df.head
+###### df.head()
 ```
+les premières lignes 
 ```
-###### df.tail
+###### df.tail()
 ```
+les dernières lignes 
 ```
 ###### df.columns
 ```
+liste de headers 
 ```
 ###### df.dtypes
 ```
+donne le type des données par col => object ou float 
 ```
-###### df.info
+###### df.info()
 ```
+infos 
 ```
-###### df.describe
+###### df.describe()
 ```
+pareil que dtypes mais donne que pour les col FLOAT 
 ```
 
 ##### Accès aux éléments d'une table de données
@@ -190,17 +197,17 @@ On peut accéder aux valeurs du DataFrame via des indices ou plages d'indice. La
 Il y a différentes manières de le faire, l'utilisation de `.iloc[slice_ligne,slice_colonne]` constitue une des solutions les plus simples. N'oublions pas que shape permet d'obtenir les dimensions (lignes et colonnes) du DataFrame.
 ###### Acceder aux cinq premières lignes de toutes les colonnes
 ```python
-
+df.iloc[ :5 , : ]
 ```
 
 ###### Acceder à toutes les lignes de la dernière colonne
 ```python
-
+df.iloc[ : , -1 ]
 ```
 
 ###### Acceder aux cinq premières lignes des colonnes 0, 2 et 3
 ```python
-
+df.iloc[ :5 , [0,2,3] ]
 ```
 
 ##### Conversion de type
@@ -340,4 +347,93 @@ Quelle interpretation biologique faites-vous de cet enrichissement en termes GO 
 
 ```
 
+
+CODE CORRECTION 
+
+
+```
+%matplotlib nbagg
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.stats import norm
+
+
+fig, ax = plt.subplots() # 1 seul dessin ; ax fait des dessins => ici plot choisi 
+x = np.linspace(norm.ppf(0.01), # norm = loi normale 
+                norm.ppf(0.99), 100) # linspace = comme une array en python 
+
+ax.plot(x, norm.pdf(x),
+       'r-', lw=5, alpha=0.6) #plot fait du discret avec les données de x 
+
+ax.plot(x, np.full(len(x), 0.2),
+       'b-', lw=1) # ici in rajoute 1 dessin sur le premier dessin pour l'enrichir 
+
+fig.show()
+
+
+
+
+import pandas
+df = pandas.read_csv("./data/TCL_wt1.tsv", sep= "\t")
+df
+# à gauche c'est le num de ligne qui ne change jamais 
+#type(df) c'est 1 dataframe = 1 serie de vercteurs 
+#df.head() => head est une méthode !!!! 
+print(df.shape)
+df= df.dropna() # permet de se débarasser de lignes bizarres 
+print(df.shape)
+
+
+
+
+df = df.astype({
+    'Log2 Corrected Abundance Ratio': float, 
+    '-LOG10 Adj.P-val': float } ) #permet de se débarasser des objets et d'avoir ici des floats 
+df.describe() # maintenant 2 cols en + 
+
+
+#values = df[['Description', 'Gene Symbol']]
+#df.iloc[ :5 , : ] # accéder au 5 premières lignes de toutes les col
+#df.iloc[ : , -1 ]
+#df.iloc[ :5 , [0,2,3] ]
+
+df.loc[(df['-LOG10 Adj.P-val'] > 0 )  & (df['Log2 Corrected Abundance Ratio'] > 0.0 ) ]
+['-LOG10 Adj.P-val'].tolist()  #toutes les lignes respectent les contraintes
+
+
+fig, ax = plt.subplots() 
+field = 'Log2 Corrected Abundance Ratio'
+
+hist= ax.hist(df[field].tolist(), bins=100, rwidth=0.4 ) 
+ax.set_xlabel(field)
+ax.set_ylabel('protein count')
+
+fig.show()
+
+#la position de la médiane => plus de wildtype rich que de tetracycline 
+#on va utiliser cet échantillon pour estimer la moyenne de la loi normale 
+from math import sqrt
+_ = df[field].tolist()
+n = len(_)
+mu = np.mean(_)
+s2 = np.std(_)*np.std(_) 
+sigma = sqrt((n/(n+1)*s2)) # correction 
+print(mu, sigma)
+
+
+x= np.linspace(-4,1.5,100)
+dx = hist[1][1] - hist[1][0]
+bar_scale= dx * n # generate PDF domain points
+
+ax.plot(x,norm.pdf(x,loc=mu,scale=sigma)* bar_scale)# scale (déviation standart) 
+# on rajoute ça ( loc=mu,scale=sigma) car mu et sigma ne sont pas les standard 0 et 1 
+fig.show()
+
+
+
+
+
+
+
+```
 
